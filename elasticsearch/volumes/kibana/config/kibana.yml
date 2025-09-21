@@ -1,0 +1,9 @@
+server.host: "0.0.0.0"
+server.shutdownTimeout: "5s"
+monitoring.ui.container.elasticsearch.enabled: true
+
+# My configs
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+xpack.encryptedSavedObjects.encryptionKey: some-random-string-32charslong1!
+xpack.security.encryptionKey: some-random-string-32charslong2!
+xpack.reporting.encryptionKey: some-random-string-32charslong3!

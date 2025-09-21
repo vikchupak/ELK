@@ -1,0 +1,39 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+# Use the autodiscover provider to find Docker containers
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      # Template for handling logs from the 'nestjs-app' container
+      templates:
+        - condition:
+            equals:
+              docker.container.labels.app: "nestjs"
+          config:
+            - type: filestream
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              parsers:
+                - container: {}
+              processors:
+                - decode_json_fields:
+                    fields: ["message"]
+                    process_array: false
+                    max_depth: 2
+                    target: "json_payload"
+                    overwrite_keys: true
+      # Disable the default configuration to prevent catching unrelated logs
+      hints.default_config:
+        enabled: false
+
+logging.metrics.enabled: false
+
+processors:
+  - add_docker_metadata: ~
+
+output.logstash:
+  hosts: ["opensearch-logstash:5044"]

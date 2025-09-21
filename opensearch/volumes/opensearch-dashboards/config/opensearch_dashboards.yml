@@ -1,0 +1,8 @@
+opensearch.ssl.verificationMode: none
+opensearch.username: kibanaserver
+opensearch.password: kibanaserver
+opensearch.requestHeadersWhitelist: [authorization, securitytenant]
+server.host: '0.0.0.0'
+
+# My configs
+opensearch.hosts: [http://opensearch:9200]

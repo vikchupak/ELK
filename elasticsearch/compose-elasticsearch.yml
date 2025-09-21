@@ -1,0 +1,72 @@
+name: elk-elastic
+
+networks:
+  elk-elastic-network:
+    name: elk-elastic-network
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+    name: elasticsearch-data
+  kibana-data:
+    name: kibana-data
+  elastic-filebeat-data:
+    name: elastic-filebeat-data
+
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:9.0.7
+    ports:
+      - 9200:9200 # REST API
+      - 9300:9300 # Transport protocol (node-to-node communication)
+    volumes:
+      # docker run --rm elasticsearch:9.0.7 cat /usr/share/elasticsearch/config/elasticsearch.yml > ./elasticsearch/config/elasticsearch.yml
+      - ./volumes/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - elk-elastic-network
+    # https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-basic#_start_a_single_node_cluster
+    mem_limit: 2g
+
+  kibana:
+    container_name: kibana
+    image: kibana:9.0.7
+    ports:
+      - 5601:5601
+    volumes:
+      # docker run --rm kibana:9.0.7 cat /usr/share/kibana/config/kibana.yml > ./kibana/config/kibana.yml
+      - ./volumes/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kibana-data:/usr/share/kibana/data
+    networks:
+      - elk-elastic-network
+    depends_on:
+      - elasticsearch
+
+  elastic-logstash:
+    container_name: elastic-logstash
+    image: logstash:9.0.7
+    ports:
+      - 5044:5044 # Beats input (Filebeat, etc.)
+      - 8080:8080 # HTTP input (REST)
+    volumes:
+     - ./volumes/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+     - ./volumes/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - elk-elastic-network
+    depends_on:
+      - elasticsearch
+  
+  elastic-filebeat:
+    container_name: elastic-filebeat
+    image: elastic/filebeat:9.1.4
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./volumes/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - elastic-filebeat-data:/usr/share/filebeat/data
+    networks:
+      - elk-elastic-network
+    depends_on:
+      - elastic-logstash

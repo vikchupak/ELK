@@ -1,0 +1,4 @@
+FROM logstash:9.0.7
+
+# Install logstash-output-opensearch plugin
+RUN logstash-plugin install logstash-output-opensearch
