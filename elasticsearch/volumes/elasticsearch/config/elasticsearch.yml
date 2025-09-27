@@ -1,7 +1,7 @@
 cluster.name: "docker-cluster"
 network.host: 0.0.0.0
-action.destructive_requires_name: false
 
 # My configs
 discovery.type: single-node
+action.destructive_requires_name: false
 xpack.security.enabled: false
